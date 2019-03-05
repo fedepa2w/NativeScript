@@ -8,7 +8,8 @@ import {
     ViewBase, Property, booleanConverter, EventData, layout,
     getEventOrGestureName, traceEnabled, traceWrite, traceCategories,
     InheritedProperty,
-    ShowModalOptions
+    ShowModalOptions,
+    eachDescendant
 } from "../view-base";
 
 import { HorizontalAlignment, VerticalAlignment, Visibility, Length, PercentLength } from "../../styling/style-properties";
@@ -81,6 +82,8 @@ export abstract class ViewCommon extends ViewBase implements ViewDefinition {
 
     private _localAnimations: Set<am.Animation>;
 
+    // public _rootOfModule: string;
+
     _currentWidthMeasureSpec: number;
     _currentHeightMeasureSpec: number;
 
@@ -135,6 +138,50 @@ export abstract class ViewCommon extends ViewBase implements ViewDefinition {
             scope.css = css;
         }
     }
+
+    public _onLivesync(context?: ModuleContext): boolean {
+        _rootModalViews.forEach(v => v.closeModal());
+        _rootModalViews.length = 0;
+
+        console.log(context);
+        if (context && context.path) {
+            if (context.path.includes(this._rootOfModule)) {
+                this.changeCssFile(context.path);
+                return true;
+            } else {
+                eachDescendant(this, (child: ViewBase) => {
+                    console.log(child)
+                    console.log(child._rootOfModule)
+                    if (context.path.includes(child._rootOfModule)) {
+                        (<this>child).changeCssFile(context.path);
+                    }
+                    return true;
+                });
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // @profile
+    // public onLoaded() {
+    //     this.setFlag(Flags.superOnLoadedCalled, true);
+    //     if (this._isLoaded) {
+    //         return;
+    //     }
+
+    //     this._isLoaded = true;
+    //     this._cssState.onLoaded();
+    //     this._resumeNativeUpdates(SuspendType.Loaded);
+
+    //     this.eachChild(child => {
+    //         this.loadView(child);
+    //         return true;
+    //     });
+
+    //     this._emit("loaded");
+    // }
 
     _setupAsRootView(context: any): void {
         super._setupAsRootView(context);
@@ -208,12 +255,6 @@ export abstract class ViewCommon extends ViewBase implements ViewDefinition {
         } else if (typeof arg === "number") {
             this._disconnectGestureObservers(<GestureTypes>arg);
         }
-    }
-
-    _onLivesync(): boolean {
-        _rootModalViews.forEach(v => v.closeModal());
-        _rootModalViews.length = 0;
-        return false;
     }
 
     public onBackPressed(): boolean {
