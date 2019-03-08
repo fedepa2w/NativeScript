@@ -60,9 +60,7 @@ export function load(pathOrOptions: string | LoadOptions, context?: any): View {
 export function loadPage(moduleNamePath: string, fileName: string, context?: any): View {
     const componentModule = loadInternal(fileName, context, moduleNamePath);
     const componentView = componentModule && componentModule.component;
-    const lastIndexOfSeparator = moduleNamePath.lastIndexOf(path.separator);
-    const moduleName = moduleNamePath.substring(lastIndexOfSeparator + 1);
-    componentView._rootOfModule = moduleName;
+    setRootOfModule(componentView, moduleNamePath);
     return componentView;
 }
 
@@ -139,6 +137,12 @@ const moduleCreateView = profile("module.createView", (moduleNamePath: string, m
     }
     return view;
 });
+
+function setRootOfModule(componentView: View, moduleNamePath: string): void {
+    const lastIndexOfSeparator = moduleNamePath.lastIndexOf(path.separator);
+    const moduleName = moduleNamePath.substring(lastIndexOfSeparator + 1);
+    componentView._rootOfModule = moduleName;
+}
 
 function loadInternal(fileName: string, context?: any, moduleNamePath?: string): ComponentModule {
     let componentModule: ComponentModule;
@@ -246,8 +250,6 @@ function loadCustomComponent(componentPath: string, componentName?: string, attr
         }
     }
 
-    const componentView = result.component;
-    componentView._rootOfModule = componentName;
     return result;
 }
 

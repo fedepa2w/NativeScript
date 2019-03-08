@@ -82,8 +82,6 @@ export abstract class ViewCommon extends ViewBase implements ViewDefinition {
 
     private _localAnimations: Set<am.Animation>;
 
-    // public _rootOfModule: string;
-
     _currentWidthMeasureSpec: number;
     _currentHeightMeasureSpec: number;
 
@@ -143,45 +141,22 @@ export abstract class ViewCommon extends ViewBase implements ViewDefinition {
         _rootModalViews.forEach(v => v.closeModal());
         _rootModalViews.length = 0;
 
-        console.log(context);
         if (context && context.path) {
-            if (context.path.includes(this._rootOfModule)) {
+            if (this._rootOfModule && context.path.includes(this._rootOfModule)) {
                 this.changeCssFile(context.path);
                 return true;
             } else {
-                eachDescendant(this, (child: ViewBase) => {
-                    console.log(child)
-                    console.log(child._rootOfModule)
-                    if (context.path.includes(child._rootOfModule)) {
+                return eachDescendant(this, (child: ViewBase) => {
+                    if (child._rootOfModule && context.path.includes(child._rootOfModule)) {
                         (<this>child).changeCssFile(context.path);
+                        return true;
                     }
-                    return true;
                 });
-                return true;
             }
         }
 
         return false;
     }
-
-    // @profile
-    // public onLoaded() {
-    //     this.setFlag(Flags.superOnLoadedCalled, true);
-    //     if (this._isLoaded) {
-    //         return;
-    //     }
-
-    //     this._isLoaded = true;
-    //     this._cssState.onLoaded();
-    //     this._resumeNativeUpdates(SuspendType.Loaded);
-
-    //     this.eachChild(child => {
-    //         this.loadView(child);
-    //         return true;
-    //     });
-
-    //     this._emit("loaded");
-    // }
 
     _setupAsRootView(context: any): void {
         super._setupAsRootView(context);
